@@ -5,7 +5,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Conquista Cálculo | Carrera de cálculo por equipos',
   description: 'Una expedición multijugador para conquistar las tierras del cálculo.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -26,11 +25,8 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
+  colorScheme: 'dark',
+  themeColor: '#102526',
 }
 
 export default function RootLayout({
