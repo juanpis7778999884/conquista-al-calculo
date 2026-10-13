@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react'
 
 import { zones } from '@/data/questions'
 import { useRoom } from '@/hooks/use-room'
@@ -25,6 +32,7 @@ import {
 } from '@/lib/supabase/client'
 
 const TOTAL_ZONES = zones.length
+const STEPS_PER_ZONE = zones.length > 0 ? zones[0].steps.length : 0
 const MAX_TEAMS = 8
 
 function Timer({ seconds }: { seconds: number | null }) {
@@ -40,11 +48,12 @@ function MapSVG({
   active: string | null
   onSelect: (id: string) => void
 }) {
+  const [focused, setFocused] = useState<string | null>(null)
   return (
     <svg
       viewBox="0 0 700 380"
       className="w-full"
-      role="img"
+      role="group"
       aria-label="Mapa de las zonas de Conquista Cálculo"
     >
       <path
@@ -55,16 +64,19 @@ function MapSVG({
       />
       {zones.map((zone) => {
         const won = conquered.includes(zone.id)
-        const selected = active === zone.id
+        const highlighted = active === zone.id || focused === zone.id
         const x = zone.labelX ?? 350
         const y = zone.labelY ?? 220
         return (
           <g
             key={zone.id}
+            id={`zona-${zone.id}`}
             role="button"
             tabIndex={0}
             aria-label={`${zone.name}${won ? ', conquistada' : ', disponible'}`}
             onClick={() => onSelect(zone.id)}
+            onFocus={() => setFocused(zone.id)}
+            onBlur={() => setFocused(null)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
@@ -75,9 +87,9 @@ function MapSVG({
           >
             <path
               d={zone.path}
-              fill={won ? '#bc704d' : selected ? '#536e64' : '#294446'}
-              stroke={selected ? '#f3cd76' : won ? '#e3b86c' : '#78918a'}
-              strokeWidth={selected ? 4 : 2}
+              fill={won ? '#bc704d' : highlighted ? '#536e64' : '#294446'}
+              stroke={highlighted ? '#f3cd76' : won ? '#e3b86c' : '#78918a'}
+              strokeWidth={highlighted ? 4 : 2}
             />
             {won && (
               <path
@@ -175,8 +187,24 @@ export default function Page() {
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [finalView, setFinalView] = useState<'podio' | 'mapa'>('podio')
   const [rejoinChecked, setRejoinChecked] = useState(false)
+  const [liveMessage, setLiveMessage] = useState('')
   const busyRef = useRef(false)
   const selectedZoneRef = useRef<string | null>(null)
+  const dialogRef = useRef<HTMLDivElement | null>(null)
+  const firstOptionRef = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    if (!selectedZone) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const frame = window.requestAnimationFrame(() => {
+      firstOptionRef.current?.focus()
+    })
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.cancelAnimationFrame(frame)
+    }
+  }, [selectedZone])
 
   useEffect(() => {
     selectedZoneRef.current = selectedZone
@@ -358,12 +386,44 @@ export default function Page() {
   function handleSelectZone(zoneId: string) {
     if (conqueredZones(progress, ownTeamId ?? '').includes(zoneId)) return
     setGameFeedback('')
+    setLiveMessage('')
+    selectedZoneRef.current = zoneId
     setSelectedZone(zoneId)
   }
 
   function closeModal() {
+    const zoneId = selectedZoneRef.current
     setSelectedZone(null)
     setGameFeedback('')
+    if (zoneId) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(`zona-${zoneId}`)?.focus()
+      })
+    }
+  }
+
+  function handleDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.stopPropagation()
+      closeModal()
+      return
+    }
+    if (event.key !== 'Tab' || !dialogRef.current) return
+    const focusable = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      ),
+    )
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
   }
 
   async function handleSubmitAnswer(originalIndex: number) {
@@ -395,33 +455,38 @@ export default function Page() {
       }
       if (parsed.code === 'paso_invalido') {
         setGameFeedback(parsed.message)
+        setLiveMessage(parsed.message)
         await refresh()
         return
       }
       if (parsed.code === 'enfriamiento') {
         setCooldownUntil(Date.now() + 1000)
         setGameFeedback(parsed.message)
+        setLiveMessage(parsed.message)
         return
       }
       setGameFeedback(parsed.message)
+      setLiveMessage(parsed.message)
       return
     }
 
     if (!data.correct) {
       setCooldownUntil(Date.now() + 1000)
       setGameFeedback('Respuesta incorrecta: +15 segundos. Revisa el concepto e inténtalo de nuevo.')
+      setLiveMessage('Respuesta incorrecta. Se suman 15 segundos.')
     } else if (data.zone_status === 'conquered') {
-      setGameFeedback('Zona conquistada.')
-      setSelectedZone(null)
+      setLiveMessage('Zona conquistada.')
+      closeModal()
     } else {
       setGameFeedback('Correcto.')
+      setLiveMessage('Correcto.')
     }
     await refresh()
   }
 
   if (!hydrated || (session && !rejoinChecked)) {
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] flex items-center justify-center">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] flex items-center justify-center">
         <p>Reanudando sesión…</p>
       </main>
     )
@@ -429,7 +494,7 @@ export default function Page() {
 
   if (!configured || !supabase) {
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] px-6 py-16 flex items-center justify-center text-center">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] px-6 py-16 flex items-center justify-center text-center">
         <section className="max-w-lg border border-[#806744] bg-[#183233] p-8">
           <h1 className="font-serif text-3xl text-[#f4d892]">Falta configurar Supabase</h1>
           <p className="mt-4 text-[#a9c0b6] leading-relaxed">
@@ -445,7 +510,7 @@ export default function Page() {
 
   if (!session) {
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] px-5 py-10 flex items-center justify-center">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] px-5 py-10 flex items-center justify-center">
         <section className="w-full max-w-5xl grid lg:grid-cols-[1.1fr_.9fr] gap-12 items-center">
           <div>
             <p className="text-[#e3b86c] uppercase tracking-[.25em] text-sm mb-3">
@@ -457,8 +522,8 @@ export default function Page() {
               <i className="text-[#e48661]">Cálculo</i>
             </h1>
             <p className="mt-8 max-w-md text-[#a9c0b6] leading-relaxed">
-              {TOTAL_ZONES} territorios. Tres desafíos por zona. Una partida real para equipos
-              que compiten en la misma sala.
+              {TOTAL_ZONES} territorios. {STEPS_PER_ZONE} desafíos por zona. Una partida real
+              para equipos que compiten en la misma sala.
             </p>
             <form
               className="mt-10 grid gap-3 max-w-md"
@@ -523,7 +588,7 @@ export default function Page() {
 
   if (!room) {
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] flex items-center justify-center">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] flex items-center justify-center">
         <p>Cargando la sala…</p>
       </main>
     )
@@ -532,7 +597,7 @@ export default function Page() {
   if (room.status === 'lobby') {
     const orderedTeams = [...teams].sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] px-5 py-8">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] px-5 py-8">
         <div className="max-w-4xl mx-auto">
           <header className="border-b border-[#365451] pb-5 flex items-start justify-between gap-4">
             <div>
@@ -620,7 +685,7 @@ export default function Page() {
 
   if (room.status === 'finished') {
     return (
-      <main className="min-h-screen bg-[#102526] text-[#f6e5bd] px-5 py-10">
+      <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] px-5 py-10">
         <div className="max-w-3xl mx-auto">
           <header className="text-center border-b border-[#365451] pb-6">
             <p className="text-[#e3b86c] uppercase tracking-widest text-xs">Partida terminada</p>
@@ -697,7 +762,10 @@ export default function Page() {
   const zoneDone = selectedProgress?.status === 'conquered'
 
   return (
-    <main className="min-h-screen bg-[#102526] text-[#f6e5bd] px-4 py-5">
+    <main className="min-h-dvh bg-[#102526] text-[#f6e5bd] px-4 py-5">
+      <p aria-live="polite" className="sr-only">
+        {liveMessage}
+      </p>
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-wrap items-center gap-4 justify-between border-b border-[#365451] pb-4">
           <div>
@@ -759,15 +827,14 @@ export default function Page() {
 
       {selectedZoneData && stepData && (
         <div
+          ref={dialogRef}
           className="fixed inset-0 bg-black/70 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="question-title"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') closeModal()
-          }}
+          onKeyDown={handleDialogKeyDown}
         >
-          <div className="bg-[#183233] border border-[#b9955b] max-w-xl w-full p-7">
+          <div className="bg-[#183233] border border-[#b9955b] max-w-xl w-full p-7 max-h-[90dvh] overflow-y-auto">
             <div className="flex justify-between">
               <div>
                 <p className="text-[#e3b86c] uppercase text-xs tracking-widest">
@@ -788,9 +855,10 @@ export default function Page() {
             </div>
             <p className="mt-8 text-lg">{stepData.prompt}</p>
             <div className="grid gap-3 mt-5">
-              {displayOrder.map((originalIndex) => (
+              {displayOrder.map((originalIndex, position) => (
                 <button
                   key={originalIndex}
+                  ref={position === 0 ? firstOptionRef : undefined}
                   type="button"
                   disabled={answerBusy || onCooldown || zoneDone}
                   onClick={() => void handleSubmitAnswer(originalIndex)}

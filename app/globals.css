@@ -160,4 +160,9 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  :where(input, button, textarea, select, a):focus-visible {
+    outline: 2px solid #f4d892;
+    outline-offset: 2px;
+  }
 }

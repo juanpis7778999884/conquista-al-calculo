@@ -18,7 +18,7 @@ export const zones: ZoneQuestion[] = [
     labelX: 155,
     labelY: 110,
     path: 'M65 85 L165 42 L253 73 L238 160 L150 188 L62 155 Z',
-    question: '\\lim_{x\\to 2}(x^2+3x)',
+    question: 'lím (x² + 3x) cuando x → 2',
     steps: [
       {
         prompt: '¿Qué propiedad permite evaluar este límite?',
@@ -94,8 +94,8 @@ export const zones: ZoneQuestion[] = [
         options: ['|√10−3.16|', '√10+3.16', '3.16/√10', '10−3.16'],
       },
       {
-        prompt: '¿√10 es aproximadamente…?',
-        options: ['3.10', '3.16', '3.26', '4.16'],
+        prompt: 'Con √10 ≈ 3.16228, ¿cuál es el error relativo aproximado al usar 3.16?',
+        options: ['≈ 0.0007', '≈ 0.007', '≈ 0.07', '≈ 0.7'],
       },
       {
         prompt: 'El error absoluto es…',
@@ -129,23 +129,23 @@ export const zones: ZoneQuestion[] = [
   {
     id: 'problemas',
     name: 'Bosque de Problemas',
-    theme: 'Resolución',
+    theme: 'Razón de cambio',
     labelX: 400,
     labelY: 245,
     path: 'M315 184 L402 170 L500 202 L475 300 L380 322 L300 270 Z',
-    question: 'Área de un círculo de radio 3',
+    question: 'Un círculo crece: dr/dt = 2 cm/s',
     steps: [
       {
-        prompt: '¿Qué fórmula usamos?',
-        options: ['A=πr²', 'A=2πr', 'A=r/π', 'A=π+r'],
+        prompt: '¿Qué relación liga el área y el radio?',
+        options: ['A=πr²', 'A=2πr', 'A=πr', 'A=r²/π'],
       },
       {
-        prompt: '¿Qué valor sustituimos?',
-        options: ['r=9', 'r=3', 'r=π', 'r=6'],
+        prompt: 'Derivando respecto al tiempo, dA/dt = …',
+        options: ['2πr·(dr/dt)', 'πr²·(dr/dt)', '2π·(dr/dt)', '2r·(dr/dt)'],
       },
       {
-        prompt: 'El área exacta es…',
-        options: ['3π', '6π', '9π', '12π'],
+        prompt: 'Con r = 5 cm y dr/dt = 2 cm/s, dA/dt = …',
+        options: ['10π cm²/s', '20π cm²/s', '40π cm²/s', '4π cm²/s'],
       },
     ],
   },
