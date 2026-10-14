@@ -204,7 +204,9 @@ export default function Page() {
       message={
         confirm === 'finish'
           ? 'Se terminará la partida para todos los equipos y se mostrará el podio. No se puede deshacer.'
-          : 'Perderás tu equipo y no podrás volver a esta partida. La partida seguirá para los demás equipos.'
+          : room?.status === 'finished'
+            ? 'Saldrás de la sala y tu equipo no aparecerá en la próxima partida.'
+            : 'Perderás tu equipo y no podrás volver a esta partida. La partida seguirá para los demás equipos.'
       }
       confirmLabel={confirm === 'finish' ? 'Terminar' : 'Salir'}
       onConfirm={() => void (confirm === 'finish' ? confirmFinish() : confirmLeave())}
@@ -282,7 +284,7 @@ export default function Page() {
           busy={lobbyBusy}
           notice={gameNotice}
           onReset={() => void handleReset()}
-          onLeave={() => handleLeave()}
+          onLeave={() => setConfirm('leave')}
         />
         {dialog}
       </>

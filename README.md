@@ -50,6 +50,9 @@ pnpm check:concurrency  # opcional; requiere DATABASE_URL (ver abajo)
 No se puede ejecutar SQL desde el repositorio. El dueño del proyecto debe pegar los archivos
 en el **SQL Editor** de Supabase en este orden:
 
+0. `supabase/migrations/20261012000000_base_schema.sql`
+   Esquema base (`create table if not exists`). Necesario en un proyecto nuevo; en uno
+   existente no cambia nada.
 1. `supabase/migrations/20261013000000_hardening_y_rpcs.sql`
    Endurecimiento (constraints, RLS, revocación de escrituras), llaves foráneas, índices y
    las funciones RPC originales. Es idempotente: se puede ejecutar varias veces.
@@ -60,9 +63,13 @@ en el **SQL Editor** de Supabase en este orden:
 3. `supabase/migrations/20261013020000_ronda2_fase_c.sql`
    Fase C: `reset_room` ("Jugar otra vez") y `room_report` (informe para el proyector).
    Idempotente.
-4. `supabase/seed_answers.sql`
+4. `supabase/migrations/20261013030000_ronda3_fixes.sql`
+   Ronda 3: `leave_room` también funciona en salas terminadas (marca `left_at`, traspasa el
+   anfitrión y cierra la sala vacía) y se revoca `cleanup_old_rooms` a `anon`/`authenticated`.
+   Idempotente.
+5. `supabase/seed_answers.sql`
    Carga las 21 respuestas (7 zonas × 3 pasos). Idempotente (`on conflict do update`).
-5. `supabase/verify.sql`
+6. `supabase/verify.sql`
    Consultas de verificación (RLS, políticas, grants de funciones, constraints, FKs, índices,
    respuestas cargadas y objetos de las rondas 2). No modifica nada.
 

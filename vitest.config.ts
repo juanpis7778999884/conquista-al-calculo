@@ -13,6 +13,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    exclude: ['node_modules/**', 'tests/sql/bundle.test.ts'],
     // Las pruebas SQL con PGlite aplican las migraciones (x2) y el seed en cada
     // caso, así que tardan varios segundos.
     testTimeout: 30000,

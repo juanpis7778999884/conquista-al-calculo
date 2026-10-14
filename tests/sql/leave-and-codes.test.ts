@@ -98,14 +98,45 @@ describe('leave_room', () => {
     expect(room?.status).toBe('finished')
   })
 
-  it('en finished no hace nada', async () => {
+  it('en finished marca left_at y traspasa el anfitrión', async () => {
+    db = await createDb()
+    const host = await createRoom(db, 'A')
+    const other = await joinRoom(db, host.code, 'B')
+    await startGame(db, host)
+    await conquerAll(db, host)
+    await conquerAll(db, other)
+
+    const result = await leaveRoom(db, host)
+    expect(field<string>(result, 'status')).toBe('finished')
+
+    const room = await one<{ status: string; host_team_id: string }>(
+      db,
+      'select status, host_team_id from rooms where id = $1',
+      [host.roomId],
+    )
+    expect(room?.status).toBe('finished')
+    expect(room?.host_team_id).toBe(other.teamId)
+
+    const team = await one<{ left_at: string | null }>(
+      db,
+      'select left_at from teams where id = $1',
+      [host.teamId],
+    )
+    expect(team?.left_at).not.toBeNull()
+  })
+
+  it('en finished, si sale el último equipo, borra la sala', async () => {
     db = await createDb()
     const host = await createRoom(db, 'A')
     await startGame(db, host)
     await conquerAll(db, host)
 
     const result = await leaveRoom(db, host)
-    expect(field<string>(result, 'status')).toBe('finished')
+    expect(field<string>(result, 'status')).toBe('closed')
+    const room = await one<{ n: number }>(db, 'select count(*)::int as n from rooms where id = $1', [
+      host.roomId,
+    ])
+    expect(room?.n).toBe(0)
   })
 })
 

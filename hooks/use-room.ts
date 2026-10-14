@@ -58,6 +58,7 @@ export function useRoom(
     if (roomResult.data) setRoom(roomResult.data)
     setTeams(teamsResult.data ?? [])
     setProgress(progressResult.data ?? [])
+    if (subscribedRef.current) setConnection('connected')
   }, [supabase, roomId])
 
   const debouncedRefresh = useCallback(() => {
@@ -132,9 +133,8 @@ export function useRoom(
   useEffect(() => {
     if (!supabase || !roomId) return
     const interval = window.setInterval(() => {
-      if (!subscribedRef.current) {
-        void refresh()
-      }
+      // Respaldo siempre activo: si el canal pierde eventos, el estado se corrige solo.
+      void refresh()
     }, POLL_INTERVAL_MS)
     return () => window.clearInterval(interval)
   }, [supabase, roomId, refresh])

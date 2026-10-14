@@ -24,7 +24,7 @@ export function Ranking({ stats, ownTeamId }: RankingProps) {
             <p className="truncate text-sm">
               {team.name}
               {team.teamId === ownTeamId && <span className="ml-2 text-xs text-oro">(tú)</span>}
-              {team.leftAt !== null && (
+              {team.leftAt !== null && team.finishedAt === null && (
                 <span className="ml-2 text-xs text-aviso">Abandonó</span>
               )}
             </p>

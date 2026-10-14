@@ -7,7 +7,6 @@ import {
   getSupabase,
   isSupabaseConfigured,
   type ProgressRow,
-  type RoomReport,
   type RoomRow,
   type TeamRow,
 } from '@/lib/supabase/client'
@@ -23,7 +22,6 @@ export default function ProyectorPage() {
   const [room, setRoom] = useState<RoomRow | null>(null)
   const [teams, setTeams] = useState<TeamRow[]>([])
   const [progress, setProgress] = useState<ProgressRow[]>([])
-  const [report, setReport] = useState<RoomReport | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -50,12 +48,6 @@ export default function ProyectorPage() {
       setRoom(roomResult.data)
       setTeams(teamsResult.data ?? [])
       setProgress(progressResult.data ?? [])
-      if (roomResult.data.status === 'finished') {
-        const reportResult = await supabase.rpc('room_report', { p_room_id: id })
-        setReport(reportResult.data ?? null)
-      } else {
-        setReport(null)
-      }
       setPhase('ready')
     },
     [supabase],
@@ -125,7 +117,7 @@ export default function ProyectorPage() {
           </p>
         </header>
 
-        {phase === 'ready' && room?.status === 'finished' && report ? (
+        {phase === 'ready' && room?.status === 'finished' ? (
           <section className="mt-8">
             <h2 className="font-serif text-3xl text-oro-claro mb-4">Resultado final</h2>
             <table className="w-full border-collapse text-lg">
@@ -139,8 +131,8 @@ export default function ProyectorPage() {
                 </tr>
               </thead>
               <tbody>
-                {report.teams.map((team, index) => (
-                  <tr key={team.team_id} className="border-b border-linea">
+                {ranking.map((team, index) => (
+                  <tr key={team.teamId} className="border-b border-linea">
                     <td className="py-3 font-serif text-2xl text-oro">{index + 1}</td>
                     <td className="py-3">
                       <span className="inline-flex items-center gap-3">
@@ -149,17 +141,17 @@ export default function ProyectorPage() {
                           style={{ backgroundColor: team.color }}
                         />
                         {team.name}
-                        {team.left_at !== null && (
+                        {team.leftAt !== null && team.finishedAt === null && (
                           <span className="text-xs text-aviso">Abandonó</span>
                         )}
                       </span>
                     </td>
                     <td className="py-3 text-right">
-                      {team.zonas}/{TOTAL_ZONES}
+                      {team.conquered}/{TOTAL_ZONES}
                     </td>
-                    <td className="py-3 text-right">{team.errores}</td>
+                    <td className="py-3 text-right">{team.errors}</td>
                     <td className="py-3 text-right font-mono">
-                      {team.segundos === null ? 'Sin terminar' : formatTime(team.segundos)}
+                      {team.effectiveSeconds === null ? 'Sin terminar' : formatTime(team.effectiveSeconds)}
                     </td>
                   </tr>
                 ))}

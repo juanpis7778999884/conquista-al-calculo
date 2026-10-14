@@ -8,6 +8,8 @@ const read = (relative: string) =>
 const MIGRATION_1 = read('../../../supabase/migrations/20261013000000_hardening_y_rpcs.sql')
 const MIGRATION_2 = read('../../../supabase/migrations/20261013010000_ronda2.sql')
 const MIGRATION_3 = read('../../../supabase/migrations/20261013020000_ronda2_fase_c.sql')
+const MIGRATION_0 = read('../../../supabase/migrations/20261012000000_base_schema.sql')
+const MIGRATION_4 = read('../../../supabase/migrations/20261013030000_ronda3_fixes.sql')
 const SEED = read('../../../supabase/seed_answers.sql')
 
 export type Row = Record<string, unknown>
@@ -103,6 +105,10 @@ export async function createBaseDb(options: DbOptions = {}): Promise<PGlite> {
 
     grant usage on schema public to anon, authenticated;
     grant all on all tables in schema public to anon, authenticated;
+
+    -- Supabase concede EXECUTE directo a anon/authenticated en funciones nuevas;
+    -- sin esto el test de cleanup_old_rooms daba un falso verde.
+    alter default privileges in schema public grant execute on functions to anon, authenticated;
   `)
 
   // Publicación Realtime sin rooms, para que la migración la añada.
@@ -119,6 +125,7 @@ export async function applyMigrations(db: PGlite): Promise<void> {
     await db.exec(MIGRATION_1)
     await db.exec(MIGRATION_2)
     await db.exec(MIGRATION_3)
+    await db.exec(MIGRATION_4)
   }
 }
 
@@ -305,3 +312,6 @@ export async function conquerAll(db: PGlite, session: RoomSession): Promise<void
     }
   }
 }
+
+/** Migraciones en orden, incluida la 0 (instalación desde cero). */
+export const ALL_MIGRATIONS_FROM_SCRATCH = [MIGRATION_0, MIGRATION_1, MIGRATION_2, MIGRATION_3, MIGRATION_4]

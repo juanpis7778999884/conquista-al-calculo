@@ -69,7 +69,7 @@ export function FinalScreen({
                 <div className="flex-1">
                   <p className="font-semibold">
                     {team.name}
-                    {team.leftAt !== null && (
+                    {team.leftAt !== null && team.finishedAt === null && (
                       <span className="ml-2 text-xs text-aviso">Abandonó</span>
                     )}
                   </p>

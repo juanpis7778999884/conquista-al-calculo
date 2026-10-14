@@ -103,11 +103,12 @@ export function GameScreen({
           shuffleSeed(ownTeamId, selectedZoneData.id, currentStep),
         )
       : []
-  const onCooldown = nowMs < cooldownUntil
+  // cooldownUntil está en hora local; nowMs incluye el desfase con el servidor.
+  const onCooldown = nowMs - serverOffsetMs < cooldownUntil
 
   useEffect(() => {
     setFeedback('')
-  }, [selectedZone, currentStep])
+  }, [selectedZone])
 
   useEffect(() => {
     setExplanation('')
@@ -132,6 +133,7 @@ export function GameScreen({
     const zone = selectedZone
     busyRef.current = true
     setBusy(true)
+    setFeedback('')
     const currentProgress = progress.find(
       (row) => row.team_id === ownTeamId && row.zone === zone,
     )
@@ -192,8 +194,9 @@ export function GameScreen({
     await refresh()
   }
 
-  const ownPosition = ranking.findIndex((stat) => stat.teamId === ownTeamId) + 1
-  const activeTeamCount = teams.filter((team) => team.left_at === null).length
+  const activeRanking = ranking.filter((stat) => stat.leftAt === null)
+  const ownPosition = activeRanking.findIndex((stat) => stat.teamId === ownTeamId) + 1
+  const activeTeamCount = activeRanking.length
 
   return (
     <main className="min-h-dvh bg-fondo text-crema px-4 py-5">
