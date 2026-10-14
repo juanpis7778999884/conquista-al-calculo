@@ -59,13 +59,25 @@ export function LobbyScreen({
             <p className="text-xs uppercase tracking-widest text-tenue">Código de sala</p>
             <p className="font-mono text-6xl tracking-[.25em] text-oro-claro mt-3">{code}</p>
             <p className="text-sm text-tenue mt-4">Comparte este código con los demás equipos.</p>
-            <button
-              type="button"
-              onClick={onCopy}
-              className="mt-4 border border-marco px-4 py-2 text-sm"
-            >
-              Copiar código/enlace
-            </button>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={onCopy}
+                className="border border-marco px-4 py-2 text-sm"
+              >
+                Copiar código/enlace
+              </button>
+              {isHost && (
+                <a
+                  href={`/proyector?sala=${code}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border border-marco px-4 py-2 text-sm text-center"
+                >
+                  Abrir proyector
+                </a>
+              )}
+            </div>
           </div>
           <div>
             <p className="text-sm text-tenue mb-3">

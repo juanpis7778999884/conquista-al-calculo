@@ -48,8 +48,8 @@ order by table_name, column_name;
 
 -- 5. Funciones y sus grants.
 --    Esperado: create_room, join_room, rejoin, resolve_room_code, start_game,
---    submit_answer, finish_game, leave_room ejecutables por anon;
---    cleanup_old_rooms NO.
+--    submit_answer, finish_game, leave_room, reset_room y room_report
+--    ejecutables por anon; cleanup_old_rooms NO.
 select p.proname as funcion,
        pg_get_function_identity_arguments(p.oid) as argumentos,
        has_function_privilege('anon', p.oid, 'EXECUTE') as anon_puede_ejecutar
@@ -58,7 +58,8 @@ join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
   and p.proname in (
     'create_room', 'join_room', 'rejoin', 'resolve_room_code', 'start_game',
-    'submit_answer', 'finish_game', 'leave_room', 'cleanup_old_rooms'
+    'submit_answer', 'finish_game', 'leave_room', 'reset_room', 'room_report',
+    'cleanup_old_rooms'
   )
 order by p.proname, argumentos;
 

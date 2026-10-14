@@ -57,11 +57,14 @@ en el **SQL Editor** de Supabase en este orden:
    Ronda 2: candado por sala (`pg_advisory_xact_lock`), `leave_room`, anfitrión por equipo,
    `teams.left_at`, códigos privados (`room_codes` + `rooms.code` opaco) y
    `resolve_room_code`. También idempotente. **No** modifica la migración 1.
-3. `supabase/seed_answers.sql`
+3. `supabase/migrations/20261013020000_ronda2_fase_c.sql`
+   Fase C: `reset_room` ("Jugar otra vez") y `room_report` (informe para el proyector).
+   Idempotente.
+4. `supabase/seed_answers.sql`
    Carga las 21 respuestas (7 zonas × 3 pasos). Idempotente (`on conflict do update`).
-4. `supabase/verify.sql`
+5. `supabase/verify.sql`
    Consultas de verificación (RLS, políticas, grants de funciones, constraints, FKs, índices,
-   respuestas cargadas y objetos de la ronda 2). No modifica nada.
+   respuestas cargadas y objetos de las rondas 2). No modifica nada.
 
 > Si cambias alguna pregunta o respuesta en `data/questions.ts`, actualiza
 > `scripts/answers.source.json`, ejecuta `pnpm seed` y **vuelve a ejecutar
@@ -128,6 +131,8 @@ DATABASE_URL="postgresql://...:5432/postgres" pnpm check:concurrency
 | `submit_answer` | `p_room_id`, `p_team_id`, `p_team_token`, `p_zone`, `p_step`, `p_response` | Valida paso/zona y registra el intento. |
 | `finish_game` | `p_room_id`, `p_team_id`, `p_team_token` | Solo anfitrión; `playing → finished`. |
 | `leave_room` | `p_room_id`, `p_team_id`, `p_team_token` | En `lobby` borra el equipo; en `playing` marca `left_at` (abandono). |
+| `reset_room` | `p_room_id`, `p_team_id`, `p_team_token` | Solo anfitrión, desde `finished`; limpia y vuelve a `lobby` ("Jugar otra vez"). |
+| `room_report` | `p_room_id` | Informe JSON de una sala terminada (tabla de equipos). |
 | `cleanup_old_rooms` | — | Borra salas con más de 24 h. **Sin grant a `anon`**. |
 
 Los errores usan códigos estables (`sala_no_existe`, `sala_llena`, `nombre_repetido`,
@@ -147,6 +152,11 @@ Los errores usan códigos estables (`sala_no_existe`, `sala_llena`, `nombre_repe
 
 Un equipo que abandona en partida aparece como **"Abandonó"** y no cuenta para el cierre de
 sala. Si vuelve con la misma sesión, `rejoin` lo reactiva.
+
+El anfitrión puede abrir una **vista de proyector** (`/proyector?sala=CODIGO`, enlace desde el
+lobby) que muestra el ranking en vivo y, al terminar, el informe final (`room_report`). Tras la
+partida, el anfitrión puede pulsar **"Jugar otra vez"** (`reset_room`) para volver al lobby con
+los mismos equipos; el resto ve "Esperando al anfitrión…".
 
 ### Tiempo y ranking
 
@@ -168,8 +178,8 @@ sala. Si vuelve con la misma sesión, `rejoin` lo reactiva.
 ## Lista de despliegue
 
 1. `pnpm install`.
-2. Ejecutar en Supabase, en orden: migración 1 → migración 2 (`ronda2`) → `seed_answers.sql` →
-   `verify.sql` (revisar que todo salga en verde).
+2. Ejecutar en Supabase, en orden: migración 1 → migración 2 (`ronda2`) → migración 3
+   (`ronda2_fase_c`) → `seed_answers.sql` → `verify.sql` (revisar que todo salga en verde).
 3. Configurar variables en el hosting: `NEXT_PUBLIC_SUPABASE_URL`, la clave pública
    (`NEXT_PUBLIC_SUPABASE_ANON_KEY` o `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) y, si quieres,
    `NEXT_PUBLIC_SITE_URL`.

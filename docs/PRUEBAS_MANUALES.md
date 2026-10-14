@@ -120,3 +120,24 @@ Antes de empezar:
 1. Con dos equipos que conquistan el mismo número de zonas y sin terminar, gana quien haya
    conquistado su última zona antes.
 2. Los equipos con 0 zonas quedan al final, ordenados por antigüedad.
+
+## 19. Proyector
+
+1. En el lobby (como anfitrión), pulsa **Abrir proyector** (`/proyector?sala=CODIGO`) en otra
+   pestaña/pantalla.
+2. Debe resolver el código y mostrar el ranking en vivo (equipos y zonas).
+3. Al terminar la partida, debe mostrar la **tabla de resultado final** con zonas, errores y
+   tiempo.
+
+## 20. Jugar otra vez (anfitrión)
+
+1. Con la partida terminada, en el proyector o en el móvil, el **anfitrión** ve **Jugar otra
+   vez**; el resto ve "Esperando al anfitrión…".
+2. Al pulsarlo, todos vuelven al **lobby**, el progreso y los intentos quedan a cero y los
+   equipos que habían abandonado desaparecen.
+
+## 21. Explicación tras acertar
+
+1. Acierta un reto: debe aparecer un recuadro **"Por qué"** con la explicación del paso.
+2. Al acertar el último reto de una zona, el modal muestra "¡Zona conquistada!" y la
+   explicación antes de cerrar.

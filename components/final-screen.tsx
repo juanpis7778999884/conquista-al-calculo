@@ -9,10 +9,23 @@ type FinalScreenProps = {
   ranking: TeamStat[]
   ownTeamId: string | null
   ownConquered: string[]
+  isHost: boolean
+  busy: boolean
+  notice: string
+  onReset: () => void
   onLeave: () => void
 }
 
-export function FinalScreen({ ranking, ownTeamId, ownConquered, onLeave }: FinalScreenProps) {
+export function FinalScreen({
+  ranking,
+  ownTeamId,
+  ownConquered,
+  isHost,
+  busy,
+  notice,
+  onReset,
+  onLeave,
+}: FinalScreenProps) {
   const [view, setView] = useState<'podio' | 'mapa'>('podio')
 
   return (
@@ -77,12 +90,31 @@ export function FinalScreen({ ranking, ownTeamId, ownConquered, onLeave }: Final
             <MapSvg conquered={ownConquered} active={null} onSelect={() => {}} />
           </div>
         )}
+        {isHost ? (
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={busy}
+            className="mt-8 w-full bg-boton py-4 font-bold text-[#182a29] disabled:opacity-50"
+          >
+            {busy ? 'Reiniciando…' : 'Jugar otra vez'}
+          </button>
+        ) : (
+          <p className="mt-8 w-full border border-linea py-4 text-center text-tenue">
+            Esperando al anfitrión para otra partida…
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="mt-4 text-center text-sm text-oro">
+            {notice}
+          </p>
+        )}
         <button
           type="button"
           onClick={onLeave}
-          className="mt-8 w-full bg-boton py-4 font-bold text-[#182a29]"
+          className="mt-3 w-full border border-marco py-3 text-sm text-tenue"
         >
-          Jugar de nuevo
+          Salir de la sala
         </button>
       </div>
     </main>

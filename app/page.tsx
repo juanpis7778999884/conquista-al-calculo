@@ -178,6 +178,24 @@ export default function Page() {
     await refresh()
   }
 
+  async function handleReset() {
+    if (!supabase || !session) return
+    setLobbyBusy(true)
+    setGameNotice('')
+    const { error } = await supabase.rpc('reset_room', {
+      p_room_id: session.roomId,
+      p_team_id: session.teamId,
+      p_team_token: session.teamToken,
+    })
+    setLobbyBusy(false)
+    if (error) {
+      setGameNotice(parseRpcError(error).message)
+      return
+    }
+    setGameNotice('')
+    await refresh()
+  }
+
   const dialog = (
     <ConfirmDialog
       open={confirm !== null}
@@ -260,6 +278,10 @@ export default function Page() {
           ranking={ranking}
           ownTeamId={session.teamId}
           ownConquered={ownConquered}
+          isHost={isHost}
+          busy={lobbyBusy}
+          notice={gameNotice}
+          onReset={() => void handleReset()}
           onLeave={() => handleLeave()}
         />
         {dialog}

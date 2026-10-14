@@ -62,6 +62,7 @@ export function GameScreen({
 }: GameScreenProps) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
   const [feedback, setFeedback] = useState('')
+  const [explanation, setExplanation] = useState('')
   const [liveMessage, setLiveMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState(0)
@@ -108,9 +109,14 @@ export function GameScreen({
     setFeedback('')
   }, [selectedZone, currentStep])
 
+  useEffect(() => {
+    setExplanation('')
+  }, [selectedZone])
+
   function handleSelectZone(zoneId: string) {
     if (conqueredZones(progress, ownTeamId).includes(zoneId)) return
     setFeedback('')
+    setExplanation('')
     setLiveMessage('')
     setSelectedZone(zoneId)
   }
@@ -118,6 +124,7 @@ export function GameScreen({
   function closeModal() {
     setSelectedZone(null)
     setFeedback('')
+    setExplanation('')
   }
 
   async function handleSubmitAnswer(originalIndex: number) {
@@ -129,6 +136,7 @@ export function GameScreen({
       (row) => row.team_id === ownTeamId && row.zone === zone,
     )
     const step = currentProgress?.current_step ?? 0
+    const answeredExplanation = zones.find((z) => z.id === zone)?.steps[step]?.explanation ?? ''
     const { data, error } = await supabase.rpc('submit_answer', {
       p_room_id: session.roomId,
       p_team_id: session.teamId,
@@ -169,14 +177,17 @@ export function GameScreen({
 
     if (!data.correct) {
       setCooldownUntil(Date.now() + 1000)
+      setExplanation('')
       setFeedback('Respuesta incorrecta: +15 segundos. Revisa el concepto e inténtalo de nuevo.')
       setLiveMessage('Respuesta incorrecta. Se suman 15 segundos.')
     } else if (data.zone_status === 'conquered') {
+      setExplanation(answeredExplanation)
+      setFeedback('')
       setLiveMessage('Zona conquistada.')
-      closeModal()
     } else {
+      setExplanation(answeredExplanation)
       setFeedback('Correcto.')
-      setLiveMessage('Correcto.')
+      setLiveMessage('Correcto. ' + answeredExplanation)
     }
     await refresh()
   }
@@ -255,6 +266,8 @@ export function GameScreen({
           step={currentStep}
           optionOrder={displayOrder}
           feedback={feedback}
+          explanation={explanation}
+          conquered={selectedProgress?.status === 'conquered'}
           busy={busy}
           cooldown={onCooldown}
           onAnswer={(index) => void handleSubmitAnswer(index)}

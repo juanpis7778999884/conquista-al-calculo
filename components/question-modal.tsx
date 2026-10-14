@@ -9,6 +9,8 @@ type QuestionModalProps = {
   step: number
   optionOrder: number[]
   feedback: string
+  explanation: string
+  conquered: boolean
   busy: boolean
   cooldown: boolean
   onAnswer: (originalIndex: number) => void
@@ -20,6 +22,8 @@ export function QuestionModal({
   step,
   optionOrder,
   feedback,
+  explanation,
+  conquered,
   busy,
   cooldown,
   onAnswer,
@@ -81,7 +85,9 @@ export function QuestionModal({
         <div className="flex justify-between">
           <div>
             <p className="text-oro uppercase text-xs tracking-widest">
-              {zone.theme} · Reto {step + 1}/{zone.steps.length}
+              {conquered
+                ? `${zone.theme} · Conquistada`
+                : `${zone.theme} · Reto ${step + 1}/${zone.steps.length}`}
             </p>
             <h2 id="question-title" className="font-serif text-3xl text-oro-claro mt-2">
               {zone.question}
@@ -91,30 +97,51 @@ export function QuestionModal({
             ×
           </button>
         </div>
-        <p className="mt-8 text-lg">{currentStep.prompt}</p>
-        <div className="grid gap-3 mt-5">
-          {optionOrder.map((originalIndex, position) => (
-            <button
-              key={originalIndex}
-              ref={position === 0 ? firstOptionRef : undefined}
-              type="button"
-              disabled={busy || cooldown}
-              onClick={() => onAnswer(originalIndex)}
-              className="border border-linea-clara px-4 py-3 text-left hover:border-oro-claro disabled:opacity-50"
-            >
-              {currentStep.options[originalIndex]}
-            </button>
-          ))}
-        </div>
+        {conquered ? (
+          <p className="mt-8 font-serif text-2xl text-oro-claro">¡Zona conquistada!</p>
+        ) : (
+          <>
+            <p className="mt-8 text-lg">{currentStep.prompt}</p>
+            <div className="grid gap-3 mt-5">
+              {optionOrder.map((originalIndex, position) => (
+                <button
+                  key={originalIndex}
+                  ref={position === 0 ? firstOptionRef : undefined}
+                  type="button"
+                  disabled={busy || cooldown}
+                  onClick={() => onAnswer(originalIndex)}
+                  className="border border-linea-clara px-4 py-3 text-left hover:border-oro-claro disabled:opacity-50"
+                >
+                  {currentStep.options[originalIndex]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         {feedback && (
           <p role="status" className="mt-5 text-oro">
             {feedback}
           </p>
         )}
+        {explanation && (
+          <div className="mt-5 border border-mapa-trazo bg-mapa-base p-4">
+            <p className="text-xs uppercase tracking-widest text-oro">Por qué</p>
+            <p className="mt-1 text-sm text-crema">{explanation}</p>
+          </div>
+        )}
         {cooldown && (
           <p role="status" className="mt-2 text-xs text-aviso">
             Espera un segundo…
           </p>
+        )}
+        {conquered && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-6 w-full bg-boton py-3 font-bold text-[#182a29]"
+          >
+            Continuar
+          </button>
         )}
       </div>
     </div>

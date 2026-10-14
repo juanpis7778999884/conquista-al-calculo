@@ -59,6 +59,31 @@ export type FinishGameResult = {
   server_now: string
 }
 
+export type ResetRoomResult = {
+  status: string
+  server_now: string
+}
+
+export type RoomReportTeam = {
+  team_id: string
+  name: string
+  color: string
+  left_at: string | null
+  finished_at: string | null
+  zonas: number
+  errores: number
+  segundos: number | null
+}
+
+export type RoomReport = {
+  room_id: string
+  code: string | null
+  started_at: string | null
+  finished_at: string | null
+  teams: RoomReportTeam[]
+  server_now: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -237,6 +262,14 @@ export type Database = {
       resolve_room_code: {
         Args: { p_code: string }
         Returns: string | null
+      }
+      reset_room: {
+        Args: { p_room_id: string; p_team_id: string; p_team_token: string }
+        Returns: ResetRoomResult
+      }
+      room_report: {
+        Args: { p_room_id: string }
+        Returns: RoomReport
       }
     }
     Enums: Record<string, never>

@@ -7,6 +7,7 @@ const read = (relative: string) =>
 
 const MIGRATION_1 = read('../../../supabase/migrations/20261013000000_hardening_y_rpcs.sql')
 const MIGRATION_2 = read('../../../supabase/migrations/20261013010000_ronda2.sql')
+const MIGRATION_3 = read('../../../supabase/migrations/20261013020000_ronda2_fase_c.sql')
 const SEED = read('../../../supabase/seed_answers.sql')
 
 export type Row = Record<string, unknown>
@@ -112,11 +113,12 @@ export async function createBaseDb(options: DbOptions = {}): Promise<PGlite> {
   return db
 }
 
-/** Aplica las dos migraciones EN ORDEN, dos veces (prueba de idempotencia). */
+/** Aplica las migraciones EN ORDEN, dos veces (prueba de idempotencia). */
 export async function applyMigrations(db: PGlite): Promise<void> {
   for (let round = 0; round < 2; round += 1) {
     await db.exec(MIGRATION_1)
     await db.exec(MIGRATION_2)
+    await db.exec(MIGRATION_3)
   }
 }
 
@@ -249,6 +251,18 @@ export async function leaveRoom(db: PGlite, session: RoomSession): Promise<Row |
     p_team_id: session.teamId,
     p_team_token: session.teamToken,
   })
+}
+
+export async function resetRoom(db: PGlite, session: RoomSession): Promise<Row | null> {
+  return rpcAsAnon(db, 'reset_room', {
+    p_room_id: session.roomId,
+    p_team_id: session.teamId,
+    p_team_token: session.teamToken,
+  })
+}
+
+export async function roomReport(db: PGlite, roomId: string): Promise<Row | null> {
+  return rpcAsAnon(db, 'room_report', { p_room_id: roomId })
 }
 
 export async function submitAnswer(

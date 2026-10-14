@@ -1,4 +1,4 @@
-export type QuestionStep = { prompt: string; options: string[] }
+export type QuestionStep = { prompt: string; options: string[]; explanation: string }
 export type ZoneQuestion = {
   id: string
   name: string
@@ -23,14 +23,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: '¿Qué propiedad permite evaluar este límite?',
         options: ['Sustitución directa', 'Regla de L’Hôpital', 'Factorización', 'Derivación implícita'],
+        explanation: 'Es un polinomio: se evalúa sustituyendo x = 2 directamente (propiedad de sustitución directa).',
       },
       {
         prompt: '¿Cuál es el valor de x² + 3x en x = 2?',
         options: ['8', '10', '12', '6'],
+        explanation: 'x² + 3x en x = 2 es 2² + 3·2 = 4 + 6 = 10.',
       },
       {
         prompt: 'Entonces, el límite es…',
         options: ['8', '10', '∞', 'No existe'],
+        explanation: 'Como el polinomio es continuo, el límite es el valor evaluado: 10.',
       },
     ],
   },
@@ -46,14 +49,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: '¿Cuál es f(1)?',
         options: ['0', '1', '−1', '2'],
+        explanation: 'f(1) = 1² − 1 = 0.',
       },
       {
         prompt: '¿Cuál es el límite cuando x→1?',
         options: ['−1', '0', '1', 'No existe'],
+        explanation: 'Por sustitución directa, el límite es 1² − 1 = 0.',
       },
       {
         prompt: '¿Es continua en x=1?',
         options: ['Sí, porque coinciden', 'No, porque f(1)=0', 'Solo por la derecha', 'No se puede saber'],
+        explanation: 'f(1) = 0 y el límite también es 0; al coincidir, f es continua en x = 1.',
       },
     ],
   },
@@ -69,14 +75,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: "¿Cuál es f'(x)?",
         options: ['6x+2', '3x+2', '6x²+2', 'x²+2'],
+        explanation: 'La derivada de 3x² es 6x y la de 2x es 2, así que f\'(x) = 6x + 2.',
       },
       {
         prompt: "¿Cuánto vale f'(2)?",
         options: ['10', '12', '14', '8'],
+        explanation: 'f\'(2) = 6·2 + 2 = 14.',
       },
       {
         prompt: 'La derivada representa…',
         options: ['El área', 'La pendiente instantánea', 'El valor máximo', 'La distancia'],
+        explanation: 'La derivada mide la razón de cambio instantánea: la pendiente de la recta tangente.',
       },
     ],
   },
@@ -92,14 +101,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: '¿Qué error absoluto se calcula?',
         options: ['|√10−3.16|', '√10+3.16', '3.16/√10', '10−3.16'],
+        explanation: 'El error absoluto es la diferencia en valor absoluto entre el valor real y la aproximación.',
       },
       {
         prompt: 'Con √10 ≈ 3.16228, ¿cuál es el error relativo aproximado al usar 3.16?',
         options: ['≈ 0.0007', '≈ 0.007', '≈ 0.07', '≈ 0.7'],
+        explanation: '|3.16228 − 3.16| / 3.16228 ≈ 0.00228 / 3.16228 ≈ 0.0007.',
       },
       {
         prompt: 'El error absoluto es…',
         options: ['Exactamente 0', 'Pequeño y positivo', 'Negativo', 'Mayor que 1'],
+        explanation: 'Es una diferencia en valor absoluto, así que nunca es negativa; aquí es pequeña porque la aproximación es buena.',
       },
     ],
   },
@@ -115,14 +127,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: "¿Cuál es f'(x)?",
         options: ['x', '2x', 'x²', '2'],
+        explanation: 'La derivada de x² es 2x.',
       },
       {
         prompt: "¿Cuánto vale f'(1)?",
         options: ['0', '1', '2', '−1'],
+        explanation: 'f\'(1) = 2·1 = 2; esa es la pendiente de la tangente en x = 1.',
       },
       {
         prompt: '¿Cuál es la recta tangente?',
         options: ['y=2x−1', 'y=x+1', 'y=2x+1', 'y=x−1'],
+        explanation: 'Pasa por (1, 1): y − 1 = 2(x − 1), es decir, y = 2x − 1.',
       },
     ],
   },
@@ -138,14 +153,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: '¿Qué relación liga el área y el radio?',
         options: ['A=πr²', 'A=2πr', 'A=πr', 'A=r²/π'],
+        explanation: 'El área de un círculo es A = πr².',
       },
       {
         prompt: 'Derivando respecto al tiempo, dA/dt = …',
         options: ['2πr·(dr/dt)', 'πr²·(dr/dt)', '2π·(dr/dt)', '2r·(dr/dt)'],
+        explanation: 'Por la regla de la cadena: dA/dt = 2πr · dr/dt.',
       },
       {
         prompt: 'Con r = 5 cm y dr/dt = 2 cm/s, dA/dt = …',
         options: ['10π cm²/s', '20π cm²/s', '40π cm²/s', '4π cm²/s'],
+        explanation: 'dA/dt = 2π · 5 · 2 = 20π cm²/s.',
       },
     ],
   },
@@ -161,14 +179,17 @@ export const zones: ZoneQuestion[] = [
       {
         prompt: "¿Qué representa s'(t)?",
         options: ['La posición', 'La velocidad', 'El tiempo', 'La aceleración'],
+        explanation: 'La derivada de la posición respecto al tiempo es la velocidad.',
       },
       {
         prompt: "¿Cuál es s'(t)?",
         options: ['2t+4', 't+4', '2t²+4', 't²+4'],
+        explanation: 'Derivando s(t) = t² + 4t se obtiene s\'(t) = 2t + 4.',
       },
       {
         prompt: 'La velocidad en t=2 es…',
         options: ['6', '8', '10', '4'],
+        explanation: 's\'(2) = 2·2 + 4 = 8.',
       },
     ],
   },
