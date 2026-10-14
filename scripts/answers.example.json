@@ -1,0 +1,37 @@
+{
+  "limite": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "continuidad": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "derivada": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "error": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "tangente": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "problemas": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ],
+  "aplicada": [
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 1" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 2" },
+    { "answer": 0, "explanation": "Explicación de ejemplo para el paso 3" }
+  ]
+}

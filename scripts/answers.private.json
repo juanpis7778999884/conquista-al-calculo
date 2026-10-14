@@ -1,0 +1,37 @@
+{
+  "limite": [
+    { "answer": 0, "explanation": "Es un polinomio: se evalúa sustituyendo x = 2 directamente (propiedad de sustitución directa)." },
+    { "answer": 1, "explanation": "x² + 3x en x = 2 es 2² + 3·2 = 4 + 6 = 10." },
+    { "answer": 1, "explanation": "Como el polinomio es continuo, el límite es el valor evaluado: 10." }
+  ],
+  "continuidad": [
+    { "answer": 0, "explanation": "f(1) = 1² − 1 = 0." },
+    { "answer": 1, "explanation": "Por sustitución directa, el límite es 1² − 1 = 0." },
+    { "answer": 0, "explanation": "f(1) = 0 y el límite también es 0; al coincidir, f es continua en x = 1." }
+  ],
+  "derivada": [
+    { "answer": 0, "explanation": "La derivada de 3x² es 6x y la de 2x es 2, así que f'(x) = 6x + 2." },
+    { "answer": 2, "explanation": "f'(2) = 6·2 + 2 = 14." },
+    { "answer": 1, "explanation": "La derivada mide la razón de cambio instantánea: la pendiente de la recta tangente." }
+  ],
+  "error": [
+    { "answer": 0, "explanation": "El error absoluto es la diferencia en valor absoluto entre el valor real y la aproximación." },
+    { "answer": 0, "explanation": "|3.16228 − 3.16| / 3.16228 ≈ 0.00228 / 3.16228 ≈ 0.0007." },
+    { "answer": 1, "explanation": "Es una diferencia en valor absoluto, así que nunca es negativa; aquí es pequeña porque la aproximación es buena." }
+  ],
+  "tangente": [
+    { "answer": 1, "explanation": "La derivada de x² es 2x." },
+    { "answer": 2, "explanation": "f'(1) = 2·1 = 2; esa es la pendiente de la tangente en x = 1." },
+    { "answer": 0, "explanation": "Pasa por (1, 1): y − 1 = 2(x − 1), es decir, y = 2x − 1." }
+  ],
+  "problemas": [
+    { "answer": 0, "explanation": "El área de un círculo es A = πr²." },
+    { "answer": 0, "explanation": "Por la regla de la cadena: dA/dt = 2πr · dr/dt." },
+    { "answer": 1, "explanation": "dA/dt = 2π · 5 · 2 = 20π cm²/s." }
+  ],
+  "aplicada": [
+    { "answer": 1, "explanation": "La derivada de la posición respecto al tiempo es la velocidad." },
+    { "answer": 0, "explanation": "Derivando s(t) = t² + 4t se obtiene s'(t) = 2t + 4." },
+    { "answer": 1, "explanation": "s'(2) = 2·2 + 4 = 8." }
+  ]
+}

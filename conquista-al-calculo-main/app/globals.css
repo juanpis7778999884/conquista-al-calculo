@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@theme {
+  --color-fondo: #102526;
+  --color-panel: #183233;
+  --color-panel-eco: #1d3a3a;
+  --color-marco: #806744;
+  --color-linea: #365451;
+  --color-linea-clara: #44615d;
+  --color-boton: #d87855;
+  --color-aviso: #e48661;
+  --color-oro: #e3b86c;
+  --color-oro-claro: #f4d892;
+  --color-crema: #f6e5bd;
+  --color-tenue: #a9c0b6;
+  --color-mapa-base: #142c2d;
+  --color-mapa-zona: #294446;
+  --color-mapa-activa: #536e64;
+  --color-mapa-conquistada: #bc704d;
+  --color-mapa-borde: #78918a;
+  --color-mapa-borde-oro: #e3b86c;
+  --color-mapa-trazo: #b9955b;
+  --color-mapa-marca: #f6e5bd;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-fondo);
+    color: var(--color-crema);
+  }
+  :where(input, button, textarea, select, a):focus-visible {
+    outline: 2px solid #f4d892;
+    outline-offset: 2px;
+  }
+}
