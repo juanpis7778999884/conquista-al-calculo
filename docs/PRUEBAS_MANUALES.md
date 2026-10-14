@@ -6,7 +6,7 @@ Chrome normal y Chrome de incógnito), de modo que cada uno tenga su propio `loc
 Antes de empezar:
 
 - `pnpm dev` en marcha.
-- SQL ejecutado en Supabase en orden: migración → seed → verify.
+- SQL ejecutado en Supabase en orden: migración 1 → migración 2 (`ronda2`) → seed → verify.
 
 ## 1. Crear sala
 
@@ -84,4 +84,39 @@ Antes de empezar:
 ## 13. Salir de la sala
 
 1. Pulsa **Salir de la sala**.
-2. Debe volver al home y el `localStorage` quedar limpio. Al recargar ya no debe reanudar.
+2. Debe abrirse un diálogo de confirmación; al confirmar, vuelve al home y el `localStorage`
+   queda limpio. Al recargar ya no debe reanudar. Cancelar no debe hacer nada.
+
+## 14. Salir del lobby vs. abandonar en partida
+
+1. En el **lobby**, con dos equipos, sal con Beta y confirma: Beta desaparece de la lista y el
+   contador baja.
+2. En **partida**, sal con Beta y confirma: Beta aparece marcado como **"Abandonó"** en el
+   ranking de los demás (no desaparece) y deja de contar para el cierre de sala.
+3. Si Beta era el anfitrión, el rol de anfitrión (botón "Terminar partida") pasa al equipo
+   activo más antiguo.
+
+## 15. Sin conexión con el servidor
+
+1. Con la partida en curso, en DevTools → Network pon "Offline" y recarga.
+2. Debe aparecer **"Sin conexión con el servidor"** con botón *Reintentar* (no se borra la
+   sesión).
+3. Vuelve a "Online" y espera ≤5 s (o pulsa *Reintentar*): debe reanudar la partida.
+
+## 16. Código privado y anfitrión por token
+
+1. En Supabase, `select code from rooms;` debe devolver un valor largo/opaco, no el código de
+   6 caracteres. El código que sirve para unirse solo está en `room_codes`.
+2. **Terminar partida** solo aparece/actúa para el anfitrión actual (aunque haya recargado).
+
+## 17. Mapa en móvil
+
+1. Abre la app en vista móvil (DevTools, ancho < 640 px).
+2. El mapa debe verse como **tarjetas** legibles (nombre, tema y estado), tocables para abrir
+   el reto. En pantallas grandes sigue el SVG con la ✓ sin tapar el nombre.
+
+## 18. Desempate del ranking
+
+1. Con dos equipos que conquistan el mismo número de zonas y sin terminar, gana quien haya
+   conquistado su última zona antes.
+2. Los equipos con 0 zonas quedan al final, ordenados por antigüedad.

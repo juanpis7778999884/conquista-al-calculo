@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seed": "node scripts/generate-answers-seed.mjs"
+    "seed": "node scripts/generate-answers-seed.mjs",
+    "check:concurrency": "node scripts/concurrency-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
