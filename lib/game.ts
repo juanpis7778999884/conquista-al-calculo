@@ -1,6 +1,10 @@
+import { zones } from '@/data/questions'
 import type { ProgressRow, TeamRow } from './supabase/client'
 
 export const ERROR_PENALTY_SECONDS = 15
+export const TOTAL_ZONES = zones.length
+export const STEPS_PER_ZONE = zones.length > 0 ? zones[0].steps.length : 0
+export const MAX_TEAMS = 8
 
 export type TeamStat = {
   teamId: string

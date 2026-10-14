@@ -6,15 +6,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "seed": "node scripts/generate-answers-seed.mjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.5.0",
     "@supabase/supabase-js": "^2.117.3",
     "@vercel/analytics": "1.6.1",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.16.0",
     "next": "16.4.0",
     "react": "^19",
     "react-dom": "^19",
@@ -27,8 +28,14 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.3.3",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "^3.2.7"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "unrs-resolver"]
   }
 }
