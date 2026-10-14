@@ -2,28 +2,36 @@ export type Session = {
   roomId: string
   teamId: string
   teamToken: string
-  hostToken?: string
+  code: string
 }
 
 const STORAGE_KEY = 'conquista-calculo:sesion'
 
-function isSession(value: unknown): value is Session {
-  if (typeof value !== 'object' || value === null) return false
+function coerceSession(value: unknown): Session | null {
+  if (typeof value !== 'object' || value === null) return null
   const candidate = value as Record<string, unknown>
-  return (
-    typeof candidate.roomId === 'string' &&
-    typeof candidate.teamId === 'string' &&
-    typeof candidate.teamToken === 'string' &&
-    (candidate.hostToken === undefined || typeof candidate.hostToken === 'string')
-  )
+  if (
+    typeof candidate.roomId !== 'string' ||
+    typeof candidate.teamId !== 'string' ||
+    typeof candidate.teamToken !== 'string'
+  ) {
+    return null
+  }
+  // Sesiones antiguas guardaban hostToken y no guardaban code: se ignoran /
+  // se completan a ''. El servidor devuelve el code en rejoin.
+  return {
+    roomId: candidate.roomId,
+    teamId: candidate.teamId,
+    teamToken: candidate.teamToken,
+    code: typeof candidate.code === 'string' ? candidate.code : '',
+  }
 }
 
 export function loadSession(): Session | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    const parsed: unknown = JSON.parse(raw)
-    return isSession(parsed) ? parsed : null
+    return coerceSession(JSON.parse(raw))
   } catch {
     return null
   }

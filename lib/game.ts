@@ -12,9 +12,11 @@ export type TeamStat = {
   color: string
   createdAt: string
   finishedAt: string | null
+  leftAt: string | null
   conquered: number
   errors: number
   effectiveSeconds: number | null
+  lastConqueredAt: string | null
 }
 
 export function normalizeTeamName(input: string): string {
@@ -120,23 +122,36 @@ export function buildRanking(
   const stats = teams.map<TeamStat>((team) => {
     const own = progress.filter((row) => row.team_id === team.id)
     const errors = own.reduce((sum, row) => sum + row.errors, 0)
+    const conqueredTimes = own
+      .filter((row) => row.status === 'conquered' && row.conquered_at)
+      .map((row) => row.conquered_at as string)
+    const lastConqueredAt =
+      conqueredTimes.length > 0 ? conqueredTimes.reduce((max, value) => (value > max ? value : max)) : null
     return {
       teamId: team.id,
       name: team.name,
       color: team.color,
       createdAt: team.created_at,
       finishedAt: team.finished_at,
+      leftAt: team.left_at,
       conquered: own.filter((row) => row.status === 'conquered').length,
       errors,
       effectiveSeconds: computeEffectiveSeconds(startedAt, team.finished_at, errors),
+      lastConqueredAt,
     }
   })
+
+  const timestamp = (value: string | null): number =>
+    value ? new Date(value).getTime() : Number.POSITIVE_INFINITY
 
   stats.sort((a, b) => {
     if (b.conquered !== a.conquered) return b.conquered - a.conquered
     const timeA = a.effectiveSeconds ?? Number.POSITIVE_INFINITY
     const timeB = b.effectiveSeconds ?? Number.POSITIVE_INFINITY
     if (timeA !== timeB) return timeA - timeB
+    const lastA = timestamp(a.lastConqueredAt)
+    const lastB = timestamp(b.lastConqueredAt)
+    if (lastA !== lastB) return lastA - lastB
     if (a.errors !== b.errors) return a.errors - b.errors
     if (a.createdAt < b.createdAt) return -1
     if (a.createdAt > b.createdAt) return 1

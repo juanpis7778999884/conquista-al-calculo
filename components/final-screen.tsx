@@ -54,7 +54,12 @@ export function FinalScreen({ ranking, ownTeamId, ownConquered, onLeave }: Final
                 <span className="font-serif text-3xl text-oro w-10">{index + 1}</span>
                 <span className="size-3 rounded-full" style={{ backgroundColor: team.color }} />
                 <div className="flex-1">
-                  <p className="font-semibold">{team.name}</p>
+                  <p className="font-semibold">
+                    {team.name}
+                    {team.leftAt !== null && (
+                      <span className="ml-2 text-xs text-aviso">Abandonó</span>
+                    )}
+                  </p>
                   <p className="text-sm text-tenue">
                     {team.conquered}/{TOTAL_ZONES} zonas · {team.errors} errores
                   </p>

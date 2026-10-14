@@ -2,25 +2,30 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://conquista-calculo.vercel.app'
+const description =
+  'Una expedición multijugador para conquistar las tierras del cálculo. Varios equipos compiten en la misma sala.'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Conquista Cálculo | Carrera de cálculo por equipos',
-  description: 'Una expedición multijugador para conquistar las tierras del cálculo.',
+  description,
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: '/icon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_ES',
+    url: '/',
+    siteName: 'Conquista Cálculo',
+    title: 'Conquista Cálculo | Carrera de cálculo por equipos',
+    description,
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Conquista Cálculo | Carrera de cálculo por equipos',
+    description,
   },
 }
 

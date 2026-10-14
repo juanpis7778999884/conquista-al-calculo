@@ -5,7 +5,6 @@ export type CreateRoomResult = {
   code: string
   team_id: string
   team_token: string
-  host_token: string
   color: string
   server_now: string
 }
@@ -29,6 +28,14 @@ export type RejoinResult = {
   started_at: string | null
   finished_at: string | null
   host_team_id: string | null
+  is_host: boolean
+  left_at: string | null
+  server_now: string
+}
+
+export type LeaveRoomResult = {
+  status: string
+  host_team_id?: string | null
   server_now: string
 }
 
@@ -94,6 +101,7 @@ export type Database = {
           color: string
           created_at: string
           finished_at: string | null
+          left_at: string | null
         }
         Insert: {
           id?: string
@@ -102,12 +110,14 @@ export type Database = {
           color: string
           created_at?: string
           finished_at?: string | null
+          left_at?: string | null
         }
         Update: Partial<{
           room_id: string
           name: string
           color: string
           finished_at: string | null
+          left_at: string | null
         }>
         Relationships: []
       }
@@ -202,7 +212,7 @@ export type Database = {
         Returns: RejoinResult
       }
       start_game: {
-        Args: { p_room_id: string; p_host_token: string }
+        Args: { p_room_id: string; p_team_id: string; p_team_token: string }
         Returns: StartGameResult
       }
       submit_answer: {
@@ -217,8 +227,16 @@ export type Database = {
         Returns: SubmitAnswerResult
       }
       finish_game: {
-        Args: { p_room_id: string; p_host_token: string }
+        Args: { p_room_id: string; p_team_id: string; p_team_token: string }
         Returns: FinishGameResult
+      }
+      leave_room: {
+        Args: { p_room_id: string; p_team_id: string; p_team_token: string }
+        Returns: LeaveRoomResult
+      }
+      resolve_room_code: {
+        Args: { p_code: string }
+        Returns: string | null
       }
     }
     Enums: Record<string, never>

@@ -7,6 +7,7 @@ import type { RoomRow, TeamRow } from '@/lib/supabase/client'
 
 type LobbyScreenProps = {
   room: RoomRow
+  code: string
   teams: TeamRow[]
   ownTeamId: string | null
   isHost: boolean
@@ -14,12 +15,13 @@ type LobbyScreenProps = {
   connection: ConnectionState
   notice: string
   onStart: () => void
-  onLeave: () => void
+  onRequestLeave: () => void
   onCopy: () => void
 }
 
 export function LobbyScreen({
   room,
+  code,
   teams,
   ownTeamId,
   isHost,
@@ -27,10 +29,11 @@ export function LobbyScreen({
   connection,
   notice,
   onStart,
-  onLeave,
+  onRequestLeave,
   onCopy,
 }: LobbyScreenProps) {
   const orderedTeams = [...teams].sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
+  const activeTeams = orderedTeams.filter((team) => team.left_at === null)
 
   return (
     <main className="min-h-dvh bg-fondo text-crema px-5 py-8">
@@ -44,7 +47,7 @@ export function LobbyScreen({
             <ConnectionBadge state={connection} />
             <button
               type="button"
-              onClick={onLeave}
+              onClick={onRequestLeave}
               className="border border-marco px-3 py-1 text-xs text-tenue"
             >
               Salir de la sala
@@ -54,7 +57,7 @@ export function LobbyScreen({
         <div className="grid md:grid-cols-[1fr_1.2fr] gap-8 mt-10">
           <div className="border border-marco bg-panel p-7 text-center">
             <p className="text-xs uppercase tracking-widest text-tenue">Código de sala</p>
-            <p className="font-mono text-6xl tracking-[.25em] text-oro-claro mt-3">{room.code}</p>
+            <p className="font-mono text-6xl tracking-[.25em] text-oro-claro mt-3">{code}</p>
             <p className="text-sm text-tenue mt-4">Comparte este código con los demás equipos.</p>
             <button
               type="button"
@@ -68,7 +71,7 @@ export function LobbyScreen({
             <p className="text-sm text-tenue mb-3">
               Equipos preparados{' '}
               <span className="text-oro-claro">
-                {teams.length}/{MAX_TEAMS}
+                {activeTeams.length}/{MAX_TEAMS}
               </span>
             </p>
             {orderedTeams.map((team) => (
@@ -80,7 +83,7 @@ export function LobbyScreen({
                 )}
                 {team.id === ownTeamId && <span className="text-xs text-tenue">(tú)</span>}
                 <span className="ml-auto text-xs text-tenue">
-                  {team.id === ownTeamId ? 'Tú' : 'Listo'}
+                  {team.left_at !== null ? 'Abandonó' : team.id === ownTeamId ? 'Tú' : 'Listo'}
                 </span>
               </div>
             ))}

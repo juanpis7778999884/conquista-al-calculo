@@ -49,7 +49,7 @@ export function HomeScreen({ supabase, notice, onSession }: HomeScreenProps) {
         roomId: data.room_id,
         teamId: data.team_id,
         teamToken: data.team_token,
-        hostToken: data.host_token,
+        code: data.code,
       },
       data.server_now,
     )
@@ -78,7 +78,7 @@ export function HomeScreen({ supabase, notice, onSession }: HomeScreenProps) {
       return
     }
     onSession(
-      { roomId: data.room_id, teamId: data.team_id, teamToken: data.team_token },
+      { roomId: data.room_id, teamId: data.team_id, teamToken: data.team_token, code: data.code },
       data.server_now,
     )
   }

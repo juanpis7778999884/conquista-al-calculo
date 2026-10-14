@@ -1,15 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { ConfigScreen } from '@/components/config-screen'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { FinalScreen } from '@/components/final-screen'
 import { GameScreen } from '@/components/game-screen'
 import { HomeScreen } from '@/components/home-screen'
 import { LobbyScreen } from '@/components/lobby-screen'
+import { OfflineScreen } from '@/components/offline-screen'
 import { useRoom } from '@/hooks/use-room'
 import { useSession } from '@/hooks/use-session'
-import { parseRpcError } from '@/lib/errors'
+import { classifyRejoinError, parseRpcError } from '@/lib/errors'
 import { buildRanking, conqueredZones } from '@/lib/game'
 import type { Session } from '@/lib/session'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client'
@@ -22,6 +24,9 @@ function LoadingScreen() {
   )
 }
 
+type RejoinStatus = 'checking' | 'ok' | 'offline'
+type ConfirmAction = 'leave' | 'finish'
+
 export default function Page() {
   const supabase = useMemo(() => getSupabase(), [])
   const configured = isSupabaseConfigured()
@@ -33,13 +38,17 @@ export default function Page() {
 
   const [notice, setNotice] = useState('')
   const [lobbyNotice, setLobbyNotice] = useState('')
+  const [gameNotice, setGameNotice] = useState('')
   const [lobbyBusy, setLobbyBusy] = useState(false)
-  const [rejoinChecked, setRejoinChecked] = useState(false)
+  const [rejoinStatus, setRejoinStatus] = useState<RejoinStatus>('checking')
+  const [confirm, setConfirm] = useState<ConfirmAction | null>(null)
+  const checkedKeyRef = useRef<string | null>(null)
 
   const handleLeave = useCallback(
     (message = '') => {
       clear()
       setLobbyNotice('')
+      setGameNotice('')
       setNotice(message)
     },
     [clear],
@@ -48,37 +57,59 @@ export default function Page() {
   const handleSession = useCallback(
     (next: Session, serverNow: string) => {
       calibrate(serverNow)
+      checkedKeyRef.current = `${next.roomId}:${next.teamId}:${next.teamToken}`
+      setRejoinStatus('ok')
       setNotice('')
       setSession(next)
     },
     [calibrate, setSession],
   )
 
-  useEffect(() => {
-    if (!hydrated || !supabase) return
-    if (!session) {
-      setRejoinChecked(true)
-      return
-    }
-    let cancelled = false
-    void (async () => {
-      const { data, error } = await supabase.rpc('rejoin', {
-        p_room_id: session.roomId,
-        p_team_id: session.teamId,
-        p_team_token: session.teamToken,
-      })
-      if (cancelled) return
-      if (error || !data) {
-        handleLeave('Tu sesión anterior ya no es válida. Vuelve a entrar a la sala.')
-      } else {
-        calibrate(data.server_now)
+  const performRejoin = useCallback(async (): Promise<RejoinStatus> => {
+    if (!supabase || !session) return 'offline'
+    const { data, error } = await supabase.rpc('rejoin', {
+      p_room_id: session.roomId,
+      p_team_id: session.teamId,
+      p_team_token: session.teamToken,
+    })
+    if (data && !error) {
+      if (data.code && data.code !== session.code) {
+        setSession({ ...session, code: data.code })
       }
-      setRejoinChecked(true)
-    })()
+      calibrate(data.server_now)
+      return 'ok'
+    }
+    if (classifyRejoinError(error) === 'clear') {
+      handleLeave('Tu sesión anterior ya no es válida. Vuelve a entrar a la sala.')
+      return 'ok'
+    }
+    return 'offline'
+  }, [supabase, session, calibrate, setSession, handleLeave])
+
+  useEffect(() => {
+    if (!hydrated || !supabase || !session) return
+    const key = `${session.roomId}:${session.teamId}:${session.teamToken}`
+    if (checkedKeyRef.current === key) return
+    checkedKeyRef.current = key
+    let cancelled = false
+    setRejoinStatus('checking')
+    void performRejoin().then((result) => {
+      if (!cancelled) setRejoinStatus(result)
+    })
     return () => {
       cancelled = true
     }
-  }, [hydrated, supabase, session, calibrate, handleLeave])
+  }, [hydrated, supabase, session, performRejoin])
+
+  useEffect(() => {
+    if (rejoinStatus !== 'offline') return
+    const interval = window.setInterval(() => {
+      void performRejoin().then((result) => {
+        if (result === 'ok') setRejoinStatus('ok')
+      })
+    }, 5000)
+    return () => window.clearInterval(interval)
+  }, [rejoinStatus, performRejoin])
 
   const ranking = useMemo(
     () => buildRanking(teams, progress, room?.started_at ?? null),
@@ -90,12 +121,13 @@ export default function Page() {
   )
 
   async function handleStartGame() {
-    if (!supabase || !session?.hostToken) return
+    if (!supabase || !session) return
     setLobbyBusy(true)
     setLobbyNotice('')
     const { error } = await supabase.rpc('start_game', {
       p_room_id: session.roomId,
-      p_host_token: session.hostToken,
+      p_team_id: session.teamId,
+      p_team_token: session.teamToken,
     })
     setLobbyBusy(false)
     if (error) {
@@ -106,17 +138,63 @@ export default function Page() {
   }
 
   async function handleCopy() {
-    if (!room) return
-    const link = `${window.location.origin}/?sala=${room.code}`
+    if (!session?.code) return
+    const link = `${window.location.origin}/?sala=${session.code}`
     try {
       await navigator.clipboard.writeText(link)
       setLobbyNotice('Enlace copiado al portapapeles.')
     } catch {
-      setLobbyNotice(`Comparte el código: ${room.code}`)
+      setLobbyNotice(`Comparte el código: ${session.code}`)
     }
   }
 
-  if (!hydrated || (session && !rejoinChecked)) {
+  async function confirmLeave() {
+    setConfirm(null)
+    if (supabase && session) {
+      await supabase.rpc('leave_room', {
+        p_room_id: session.roomId,
+        p_team_id: session.teamId,
+        p_team_token: session.teamToken,
+      })
+    }
+    handleLeave()
+  }
+
+  async function confirmFinish() {
+    setConfirm(null)
+    if (!supabase || !session) return
+    setLobbyBusy(true)
+    const { error } = await supabase.rpc('finish_game', {
+      p_room_id: session.roomId,
+      p_team_id: session.teamId,
+      p_team_token: session.teamToken,
+    })
+    setLobbyBusy(false)
+    if (error) {
+      setGameNotice(parseRpcError(error).message)
+      return
+    }
+    setGameNotice('')
+    await refresh()
+  }
+
+  const dialog = (
+    <ConfirmDialog
+      open={confirm !== null}
+      tone="danger"
+      title={confirm === 'finish' ? 'Terminar la partida' : 'Salir de la sala'}
+      message={
+        confirm === 'finish'
+          ? 'Se terminará la partida para todos los equipos y se mostrará el podio. No se puede deshacer.'
+          : 'Perderás tu equipo y no podrás volver a esta partida. La partida seguirá para los demás equipos.'
+      }
+      confirmLabel={confirm === 'finish' ? 'Terminar' : 'Salir'}
+      onConfirm={() => void (confirm === 'finish' ? confirmFinish() : confirmLeave())}
+      onCancel={() => setConfirm(null)}
+    />
+  )
+
+  if (!hydrated) {
     return <LoadingScreen />
   }
 
@@ -125,55 +203,88 @@ export default function Page() {
   }
 
   if (!session) {
-    return <HomeScreen supabase={supabase} notice={notice} onSession={handleSession} />
+    return (
+      <>
+        <HomeScreen supabase={supabase} notice={notice} onSession={handleSession} />
+        {dialog}
+      </>
+    )
+  }
+
+  if (rejoinStatus === 'checking') {
+    return <LoadingScreen />
+  }
+
+  if (rejoinStatus === 'offline') {
+    return (
+      <OfflineScreen
+        onRetry={() => {
+          setRejoinStatus('checking')
+          void performRejoin().then((result) => setRejoinStatus(result))
+        }}
+      />
+    )
   }
 
   if (!room) {
     return <LoadingScreen />
   }
 
+  const isHost = room.host_team_id === session.teamId
+
   if (room.status === 'lobby') {
-    const isHost = Boolean(session.hostToken && room.host_team_id === session.teamId)
     return (
-      <LobbyScreen
-        room={room}
-        teams={teams}
-        ownTeamId={session.teamId}
-        isHost={isHost}
-        busy={lobbyBusy}
-        connection={connection}
-        notice={lobbyNotice}
-        onStart={() => void handleStartGame()}
-        onLeave={() => handleLeave()}
-        onCopy={() => void handleCopy()}
-      />
+      <>
+        <LobbyScreen
+          room={room}
+          code={session.code}
+          teams={teams}
+          ownTeamId={session.teamId}
+          isHost={isHost}
+          busy={lobbyBusy}
+          connection={connection}
+          notice={lobbyNotice}
+          onStart={() => void handleStartGame()}
+          onRequestLeave={() => setConfirm('leave')}
+          onCopy={() => void handleCopy()}
+        />
+        {dialog}
+      </>
     )
   }
 
   if (room.status === 'finished') {
     return (
-      <FinalScreen
-        ranking={ranking}
-        ownTeamId={session.teamId}
-        ownConquered={ownConquered}
-        onLeave={() => handleLeave()}
-      />
+      <>
+        <FinalScreen
+          ranking={ranking}
+          ownTeamId={session.teamId}
+          ownConquered={ownConquered}
+          onLeave={() => handleLeave()}
+        />
+        {dialog}
+      </>
     )
   }
 
-  const isHost = Boolean(session.hostToken && room.host_team_id === session.teamId)
   return (
-    <GameScreen
-      supabase={supabase}
-      room={room}
-      teams={teams}
-      progress={progress}
-      session={session}
-      isHost={isHost}
-      connection={connection}
-      serverOffsetMs={serverOffsetMs}
-      refresh={refresh}
-      onLeave={handleLeave}
-    />
+    <>
+      <GameScreen
+        supabase={supabase}
+        room={room}
+        teams={teams}
+        progress={progress}
+        session={session}
+        isHost={isHost}
+        connection={connection}
+        serverOffsetMs={serverOffsetMs}
+        refresh={refresh}
+        notice={gameNotice}
+        onLeave={handleLeave}
+        onRequestLeave={() => setConfirm('leave')}
+        onRequestFinish={() => setConfirm('finish')}
+      />
+      {dialog}
+    </>
   )
 }

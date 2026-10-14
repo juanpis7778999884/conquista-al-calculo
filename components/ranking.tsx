@@ -24,6 +24,9 @@ export function Ranking({ stats, ownTeamId }: RankingProps) {
             <p className="truncate text-sm">
               {team.name}
               {team.teamId === ownTeamId && <span className="ml-2 text-xs text-oro">(tú)</span>}
+              {team.leftAt !== null && (
+                <span className="ml-2 text-xs text-aviso">Abandonó</span>
+              )}
             </p>
             <p className="text-xs text-tenue">
               {team.conquered}/{TOTAL_ZONES} zonas · {team.errors} errores

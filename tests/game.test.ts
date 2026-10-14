@@ -16,6 +16,7 @@ function makeTeam(overrides: Partial<TeamRow> & { id: string }): TeamRow {
     color: overrides.color ?? '#ffffff',
     created_at: overrides.created_at ?? '2026-01-01T00:00:00.000Z',
     finished_at: overrides.finished_at ?? null,
+    left_at: overrides.left_at ?? null,
   }
 }
 
@@ -24,6 +25,7 @@ function makeProgress(
   zone: string,
   status: string,
   errors = 0,
+  conqueredAt = '2026-01-01T00:05:00.000Z',
 ): ProgressRow {
   return {
     id: `${teamId}-${zone}`,
@@ -32,7 +34,7 @@ function makeProgress(
     zone,
     status,
     errors,
-    conquered_at: status === 'conquered' ? '2026-01-01T00:05:00.000Z' : null,
+    conquered_at: status === 'conquered' ? conqueredAt : null,
     current_step: 0,
   }
 }
@@ -120,5 +122,40 @@ describe('buildRanking', () => {
 
     const ranking = buildRanking(teams, progress, startedAt)
     expect(ranking.map((stat) => stat.teamId)).toEqual(['B', 'A'])
+  })
+
+  it('desempata por quién conquistó antes (última zona)', () => {
+    const teams = [
+      makeTeam({ id: 'A', created_at: '2026-01-01T00:00:01.000Z' }),
+      makeTeam({ id: 'B', created_at: '2026-01-01T00:00:02.000Z' }),
+    ]
+    const progress = [
+      makeProgress('A', 'z1', 'conquered', 0, '2026-01-01T00:05:30.000Z'),
+      makeProgress('B', 'z1', 'conquered', 0, '2026-01-01T00:04:10.000Z'),
+    ]
+
+    const ranking = buildRanking(teams, progress, startedAt)
+    expect(ranking.map((stat) => stat.teamId)).toEqual(['B', 'A'])
+  })
+
+  it('los equipos sin ninguna zona quedan al final, ordenados por creación', () => {
+    const teams = [
+      makeTeam({ id: 'A', created_at: '2026-01-01T00:00:02.000Z' }),
+      makeTeam({ id: 'B', created_at: '2026-01-01T00:00:01.000Z' }),
+      makeTeam({ id: 'C' }),
+    ]
+    const progress = [makeProgress('C', 'z1', 'conquered')]
+
+    const ranking = buildRanking(teams, progress, startedAt)
+    expect(ranking.map((stat) => stat.teamId)).toEqual(['C', 'B', 'A'])
+  })
+
+  it('expone left_at y lastConqueredAt en el stat', () => {
+    const teams = [makeTeam({ id: 'A', left_at: '2026-01-01T00:03:00.000Z' })]
+    const progress = [makeProgress('A', 'z1', 'conquered', 0, '2026-01-01T00:02:00.000Z')]
+
+    const [stat] = buildRanking(teams, progress, startedAt)
+    expect(stat.leftAt).toBe('2026-01-01T00:03:00.000Z')
+    expect(stat.lastConqueredAt).toBe('2026-01-01T00:02:00.000Z')
   })
 })

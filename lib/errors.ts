@@ -18,12 +18,20 @@ const MESSAGES: Record<string, string> = {
   zona_invalida: 'Esa zona no existe.',
   zona_conquistada: 'Esa zona ya está conquistada.',
   paso_invalido: 'El paso cambió. Se actualizará la pregunta.',
+  progreso_no_existe: 'No se pudo encontrar tu progreso en esa zona. Actualiza la página.',
   enfriamiento: 'Espera un segundo antes de volver a intentarlo.',
   datos_invalidos: 'Faltan datos para enviar la respuesta.',
+  pocos_equipos: 'Necesitas al menos un equipo para iniciar la partida.',
   sin_preguntas: 'El servidor no tiene preguntas configuradas.',
   codigo_agotado: 'No se pudo generar un código único. Inténtalo de nuevo.',
   network: 'No se pudo conectar con el servidor. Revisa tu conexión.',
   desconocido: 'Ha ocurrido un error inesperado. Inténtalo de nuevo.',
+}
+
+const FATAL_SESSION_CODES = new Set(['token_invalido', 'equipo_no_existe', 'sala_no_existe'])
+
+export function classifyRejoinError(error: unknown): 'clear' | 'offline' {
+  return FATAL_SESSION_CODES.has(parseRpcError(error).code) ? 'clear' : 'offline'
 }
 
 export function parseRpcError(error: unknown): ParsedRpcError {

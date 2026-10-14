@@ -33,7 +33,10 @@ type GameScreenProps = {
   connection: ConnectionState
   serverOffsetMs: number
   refresh: () => Promise<void>
+  notice: string
   onLeave: (message?: string) => void
+  onRequestLeave: () => void
+  onRequestFinish: () => void
 }
 
 function Timer({ seconds }: { seconds: number | null }) {
@@ -52,7 +55,10 @@ export function GameScreen({
   connection,
   serverOffsetMs,
   refresh,
+  notice,
   onLeave,
+  onRequestLeave,
+  onRequestFinish,
 }: GameScreenProps) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
   const [feedback, setFeedback] = useState('')
@@ -97,6 +103,10 @@ export function GameScreen({
         )
       : []
   const onCooldown = nowMs < cooldownUntil
+
+  useEffect(() => {
+    setFeedback('')
+  }, [selectedZone, currentStep])
 
   function handleSelectZone(zoneId: string) {
     if (conqueredZones(progress, ownTeamId).includes(zoneId)) return
@@ -171,23 +181,8 @@ export function GameScreen({
     await refresh()
   }
 
-  async function handleFinishGame() {
-    if (!session.hostToken) return
-    if (!window.confirm('¿Terminar la partida para todos? No se podrá continuar.')) return
-    setBusy(true)
-    const { error } = await supabase.rpc('finish_game', {
-      p_room_id: session.roomId,
-      p_host_token: session.hostToken,
-    })
-    setBusy(false)
-    if (error) {
-      setFeedback(parseRpcError(error).message)
-      return
-    }
-    await refresh()
-  }
-
   const ownPosition = ranking.findIndex((stat) => stat.teamId === ownTeamId) + 1
+  const activeTeamCount = teams.filter((team) => team.left_at === null).length
 
   return (
     <main className="min-h-dvh bg-fondo text-crema px-4 py-5">
@@ -198,7 +193,7 @@ export function GameScreen({
         <header className="flex flex-wrap items-center gap-4 justify-between border-b border-linea pb-4">
           <div>
             <p className="text-oro uppercase tracking-[.25em] text-xs">
-              Conquista Cálculo · {room.code}
+              Conquista Cálculo · {session.code}
             </p>
             <h1 className="font-serif text-3xl text-oro-claro">{ownTeam?.name ?? 'Tu equipo'}</h1>
             <ConnectionBadge state={connection} />
@@ -222,7 +217,7 @@ export function GameScreen({
           {isHost && (
             <button
               type="button"
-              onClick={() => void handleFinishGame()}
+              onClick={onRequestFinish}
               disabled={busy}
               className="border border-aviso px-4 py-2 text-sm text-aviso disabled:opacity-50"
             >
@@ -231,12 +226,17 @@ export function GameScreen({
           )}
           <button
             type="button"
-            onClick={() => onLeave()}
+            onClick={onRequestLeave}
             className="border border-marco px-4 py-2 text-sm text-tenue"
           >
             Salir de la sala
           </button>
         </div>
+        {notice && (
+          <p role="status" className="mt-3 text-right text-sm text-oro">
+            {notice}
+          </p>
+        )}
         <div className="grid lg:grid-cols-[1fr_280px] gap-6 mt-6">
           <section className="border border-marco bg-panel p-2 sm:p-5">
             <MapSvg conquered={ownConquered} active={selectedZone} onSelect={handleSelectZone} />
@@ -272,11 +272,11 @@ export function GameScreen({
               <Timer seconds={ownStat?.effectiveSeconds ?? null} />.
             </p>
             <p className="mt-2 text-tenue">
-              Posición actual: {ownPosition} de {teams.length}.
+              Posición actual: {ownPosition} de {activeTeamCount}.
             </p>
             <button
               type="button"
-              onClick={() => onLeave()}
+              onClick={onRequestLeave}
               className="mt-6 w-full bg-boton py-3 font-bold text-[#182a29]"
             >
               Salir de la sala
